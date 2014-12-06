@@ -1,9 +1,8 @@
 __author__ = 'sabat'
 
 import random
-import multiprocessing as mp
 import math
-import itertools
+import threading
 
 
 class Agents:
@@ -14,7 +13,10 @@ class Agents:
         self.a = a
         self.buyers_grid = [None] * self.size
         self.sellers = [None] * self.size
-        self.test = 0
+        self.output = []
+
+    def append_to_output(self, item):
+        self.output.append(item)
 
     def setup(self):
         for i in range(self.size):
@@ -37,27 +39,49 @@ class Agents:
         result = 0
         if end > self.size:
             end = self.size
-        for i in range(start, end):
-            self.test += 1
-            if index in self.buyers_grid[i]:
+        for ii in range(start, end):
+            if index in self.buyers_grid[ii]:
                 result += 1
         return result
 
+    class Thread(threading.Thread):
+        def __init__(self, agents, params):
+            threading.Thread.__init__(self)
+            self.params = params
+            self.agents = agents
+
+        def run(self):
+            self.agents.append_to_output(self.agents.count_buyers(self.params[0], self.params[1], self.params[2]))
+
+
     def seller_payoff(self, index):
-        result222 = 0
-        processes = 1
-        self.test = 0
+        # result222 = 0
+        processes = 8
+        starts = []
+        ends = []
+        for ii in range(0, self.size, math.ceil(self.size / processes)):
+            starts.append(ii)
+        for ii in range(math.ceil(self.size / processes), self.size + math.ceil(self.size / processes),
+                        math.ceil(self.size / processes)):
+            ends.append(ii)
+        indexes = [index] * math.floor(self.size / processes)
+        params = list(zip(indexes, starts, ends))
 
-        starts = range(0, self.size + self.size % processes, math.ceil(self.size / processes));
-        ends = range(math.ceil(self.size / processes), self.size + self.size % processes,
-                     math.ceil(self.size / processes));
+        threads = []
+        self.output = []
+        for ii in range(processes):
+            current = self.Thread(self, params[ii])
+            threads.append(current)
+            current.start()
 
-        with mp.Pool(processes) as pool:
-            params = zip(itertools.repeat(index), starts, ends)
-            pool_values = [pool.apply_async(self.count_buyers, args).get() for args in params]
-            for value in pool_values:
-                result222 += value
-        return result222 * self.sellers[index]
+        for t in threads:
+            t.join()
+
+        # with mp.Pool(processes) as pool:
+        # pool_values = [pool.apply_async(self.count_buyers, args) for args in params]
+        #     for value in pool_values:
+        #         result222 += value.get()
+        return sum(self.output) * self.sellers[index]
 
     def buyer_update(self, index):
 
@@ -99,11 +123,10 @@ class Agents:
 
 
 if __name__ == '__main__':
-    agents = Agents(10, 3, 0.1)
+    agents = Agents(10000, 3, 0.1)
     agents.setup()
     f = open('output2.txt', 'w')
-    mp.freeze_support()
-    for i in range(100):
+    for i in range(1000):
         print("Calculating: ", i)
         f.write(str(agents.get_average_w()) + "\n")
         agents.iterate(i * 10000)
