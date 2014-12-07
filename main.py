@@ -2,6 +2,7 @@ __author__ = 'sabat'
 
 import random
 import math
+
 import threading
 import time
 from queue import Queue
@@ -11,7 +12,6 @@ import numpy.random as nprnd
 
 class Agents:
     def __init__(self, size, k, a, seed=12345, threads=4):
-        random.seed(seed)
         self.size = size
         self.k = k
         self.a = a
@@ -22,6 +22,9 @@ class Agents:
         self.input = None
         self.lock = None
 
+    def append_to_output(self, item):
+        self.output.append(item)
+
     def setup(self):
         for i in range(self.size):
             row = [0] * self.k
@@ -31,14 +34,15 @@ class Agents:
                 index += 1
             self.buyers_grid[i] = row
 
-            self.sellers[i] = random.random()
+            self.sellers[i] = nprnd.random()
 
-            self.input = Queue()
-            self.lock = threading.Lock()
-            for i in range(4):
-                t = threading.Thread(target=self.worker)
-                t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
-                t.start()
+        self.input = Queue()
+        self.lock = threading.Lock()
+        for i in range(self.threads):
+            print("Hello it's ", i)
+            t = threading.Thread(target=self.worker)
+            t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
+            t.start()
 
     def buyer_payoff(self, index):
         result = 0.0
@@ -77,19 +81,19 @@ class Agents:
 
         return sum(self.output) * self.sellers[index]
 
-    # def buyer_update(self, index):
-    #
-    # old = self.buyers_grid[index][nprnd.randint(self.k)]
-    # value_old = self.sellers[old]
-    #
-    #     new_sellers = list(set(range(self.size)) - set(self.buyers_grid[index]))
-    #
-    #     new = random.choice(new_sellers)
-    #     value_new = self.sellers[new]
-    #
-    #     if value_new > value_old:
-    #         self.buyers_grid[index].remove(old)
-    #         self.buyers_grid[index].append(new)
+    def buyer_update(self, index):
+
+        old = self.buyers_grid[index][nprnd.randint(self.k)]
+        value_old = self.sellers[old]
+
+        new_sellers = list(set(range(self.size)) - set(self.buyers_grid[index]))
+
+        new = random.choice(new_sellers)
+        value_new = self.sellers[new]
+
+        if value_new > value_old:
+            self.buyers_grid[index].remove(old)
+            self.buyers_grid[index].append(new)
 
     def seller_update(self, index):
         compare_to = index
@@ -102,43 +106,27 @@ class Agents:
         self.sellers[nprnd.randint(self.size)] = nprnd.random()
 
     def iterate(self, steps):
-        f = open('output1.txt', 'w')
-
-        nprnd_randint = nprnd.randint
-        random_choice = random.choice
-        self_size = self.size
         for i in range(steps):
-            if i % 10000 == 0:
-                print("Calculating: ", i / 10000, )
-                f.write(str(agents.get_average_w()) + "\n")
-
             self.random_noise()
+            index = nprnd.randint(0, self.size)
             if nprnd.random() < self.a:
-                self.seller_update(nprnd_randint(self_size))
+                self.seller_update(index)
             else:
-                # self.buyer_update(nprnd.randint(self.size))
-                index = nprnd_randint(self_size)
-                buyers_grid = self.buyers_grid[index]
-                old = random_choice(buyers_grid)
-                value_old = self.sellers[old]
-
-                new_sellers = list(set(range(self_size)) - set(buyers_grid))
-
-                new = random_choice(new_sellers)
-                value_new = self.sellers[new]
-
-                if value_new > value_old:
-                    buyers_grid.remove(old)
-                    buyers_grid.append(new)
-        f.close()
+                self.buyer_update(index)
 
     def get_average_w(self):
         return sum(self.sellers) / self.size
 
 
 if __name__ == '__main__':
-    agents = Agents(10000, 3, 0.1, time.gmtime(), 1)
+    agents = Agents(10000, 3, 0.1, time.time(), 4)
     agents.setup()
     test = time.time()
-    agents.iterate(1000000)
-    print("Hello, ", str(test - time.time()))
+    f = open('output2.txt', 'w')
+    for i in range(1000):
+        print("Calculating: ", i, " in time: ", str(test - time.time()))
+        test = time.time()
+        f.write(str(agents.get_average_w()) + "\n")
+        agents.iterate(100000)
+
+    f.close()
