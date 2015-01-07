@@ -2,7 +2,6 @@ __author__ = 'sabat'
 
 import random
 import math
-
 import threading
 import time
 from queue import Queue
@@ -79,7 +78,7 @@ class Agents:
         [self.input.put(param) for param in params]
         self.input.join()
 
-        return sum(self.output) * self.sellers[index]
+        return sum(self.output) * (1 - self.sellers[index])
 
     def buyer_update(self, index):
 
@@ -107,7 +106,7 @@ class Agents:
 
     def iterate(self, steps):
         for i in range(steps):
-            self.random_noise()
+            # self.random_noise()
             index = nprnd.randint(0, self.size)
             if nprnd.random() < self.a:
                 self.seller_update(index)
@@ -119,14 +118,20 @@ class Agents:
 
 
 if __name__ == '__main__':
-    agents = Agents(10000, 3, 0.1, time.time(), 4)
+    n = 100000
+    k = 3
+    a = 0.16
+    steps = 1000
+    print('n={}, k={}, a={}, steps={}'.format(n, k, a, steps))
+    agents = Agents(n, k, a, time.time(), 4)
     agents.setup()
     test = time.time()
-    f = open('output2.txt', 'w')
-    for i in range(1000):
-        print("Calculating: ", i, " in time: ", str(test - time.time()))
+    f = open('output_{}_n{}_k{}_a{}_steps{}.txt'.format(time.strftime('%X_%x'), n, k, a, steps), 'w')
+    for i in range(steps):
+        average = agents.get_average_w()
+        print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
         test = time.time()
-        f.write(str(agents.get_average_w()) + "\n")
-        agents.iterate(100000)
+        f.write(str(average) + "\n")
+        agents.iterate(10000)
 
     f.close()
