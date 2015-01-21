@@ -10,15 +10,19 @@ import numpy.random as nprnd
 
 
 class Agents:
-    def __init__(self, size, k, a, seed=12345, threads=4):
+    def __init__(self, size, k, a, seed=12345, threads=4, p=None):
         self.size = size
         self.k = k
         self.a = a
+        self.p = p
+        if p is None:
+            self.p = size / 1000000 // 10 ^ 6
         self.threads = threads
         self.buyers_grid = [None] * self.size
         self.sellers = [None] * self.size
         self.output = []
         self.input = None
+        self.random = None
         self.lock = None
 
     def append_to_output(self, item):
@@ -106,7 +110,8 @@ class Agents:
 
     def iterate(self, steps):
         for i in range(steps):
-            # self.random_noise()
+            if nprnd.random() < self.p:
+                self.random_noise()
             index = nprnd.randint(0, self.size)
             if nprnd.random() < self.a:
                 self.seller_update(index)
@@ -120,18 +125,19 @@ class Agents:
 if __name__ == '__main__':
     n = 100000
     k = 3
-    a = 0.16
+    a = 0.3
     steps = 1000
-    print('n={}, k={}, a={}, steps={}'.format(n, k, a, steps))
-    agents = Agents(n, k, a, time.time(), 4)
-    agents.setup()
-    test = time.time()
-    f = open('output_{}_n{}_k{}_a{}_steps{}.txt'.format(time.strftime('%X_%x'), n, k, a, steps), 'w')
-    for i in range(steps):
-        average = agents.get_average_w()
-        print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
+    for p in [0.1, 0.3, 0.5, 0.7, 0.9]:
+        print('n={}, k={}, a={}, steps={}, p={}'.format(n, k, a, steps, p))
+        agents = Agents(n, k, a, time.time(), 4, p)
+        agents.setup()
         test = time.time()
-        f.write(str(average) + "\n")
-        agents.iterate(10000)
+        f = open('output_{}_n{}_k{}_a{}_steps{}_p{}.txt'.format(time.strftime('%Y%m%d-%H%M%S'), n, k, a, steps, p), 'w')
+        for i in range(steps):
+            average = agents.get_average_w()
+            print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
+            test = time.time()
+            f.write(str(average) + "\n")
+            agents.iterate(10000)
 
-    f.close()
+        f.close()
