@@ -22,7 +22,9 @@ class Agents:
         self.sellers = [None] * self.size
         self.output = []
         self.input = None
-        self.random = None
+        self.randoms = []
+        self.randoms_size = []
+        self.randoms_k = []
         self.lock = None
 
     def append_to_output(self, item):
@@ -43,9 +45,14 @@ class Agents:
         self.lock = threading.Lock()
         for i in range(self.threads):
             print("Hello it's ", i)
-            t = threading.Thread(target=self.worker)
+            t = threading.Thread(name="worker" + str(i), target=self.worker)
             t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
             t.start()
+        for i in range(1):
+            print("Starting random generator")
+            d = threading.Thread(name="randoms" + str(i), target=self.generate_randoms)
+            d.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
+            d.start()
 
     def buyer_payoff(self, index):
         result = 0.0
@@ -71,6 +78,16 @@ class Agents:
                 self.output.append(result)
             self_input.task_done()
 
+    def generate_randoms(self):
+        print("Its randomness")
+        while True:
+            if len(self.randoms_size) < 3:
+                self.randoms_size.append(nprnd.randint(0, self.size))
+            if len(self.randoms_k) < 3:
+                self.randoms_k.append(nprnd.randint(0, self.k))
+            if len(self.randoms) < 3:
+                self.randoms.append(nprnd.random())
+
     def seller_payoff(self, index):
         ceil = math.ceil(self.size / self.threads)
         starts = [x for x in range(0, self.size, ceil)]
@@ -86,7 +103,7 @@ class Agents:
 
     def buyer_update(self, index):
 
-        old = self.buyers_grid[index][nprnd.randint(self.k)]
+        old = self.buyers_grid[index][self.get_random_k()]
         value_old = self.sellers[old]
 
         new_sellers = list(set(range(self.size)) - set(self.buyers_grid[index]))
@@ -101,19 +118,19 @@ class Agents:
     def seller_update(self, index):
         compare_to = index
         while compare_to is index:
-            compare_to = nprnd.randint(self.size)
+            compare_to = self.get_random_size()
         if self.seller_payoff(compare_to) > self.seller_payoff(index):
             self.sellers[index] = self.sellers[compare_to]
 
     def random_noise(self):
-        self.sellers[nprnd.randint(self.size)] = nprnd.random()
+        self.sellers[self.get_random_size()] = self.get_random()
 
     def iterate(self, steps):
         for i in range(steps):
-            if nprnd.random() < self.p:
+            if self.get_random() < self.p:
                 self.random_noise()
-            index = nprnd.randint(0, self.size)
-            if nprnd.random() < self.a:
+            index = self.get_random_size()
+            if self.get_random() < self.a:
                 self.seller_update(index)
             else:
                 self.buyer_update(index)
@@ -121,16 +138,31 @@ class Agents:
     def get_average_w(self):
         return sum(self.sellers) / self.size
 
+    def get_random(self):
+        while len(self.randoms) < 1:
+            pass
+        return self.randoms.pop(0)
+
+    def get_random_k(self):
+        while len(self.randoms_k) < 1:
+            pass
+        return self.randoms_k.pop(0)
+
+    def get_random_size(self):
+        while len(self.randoms_size) < 1:
+            pass
+        return self.randoms_size.pop(0)
 
 if __name__ == '__main__':
-    n = 100000
+    n = 1000000
     k = 3
-    a = 0.3
+    a = 0.1
     steps = 1000
-    for p in [0.1, 0.3, 0.5, 0.7, 0.9]:
+    for p in [0.1]:
         print('n={}, k={}, a={}, steps={}, p={}'.format(n, k, a, steps, p))
         agents = Agents(n, k, a, time.time(), 4, p)
         agents.setup()
+        print("test")
         test = time.time()
         f = open('output_{}_n{}_k{}_a{}_steps{}_p{}.txt'.format(time.strftime('%Y%m%d-%H%M%S'), n, k, a, steps, p), 'w')
         for i in range(steps):
@@ -138,6 +170,6 @@ if __name__ == '__main__':
             print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
             test = time.time()
             f.write(str(average) + "\n")
-            agents.iterate(10000)
+            agents.iterate(1000)
 
         f.close()
