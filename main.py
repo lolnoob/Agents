@@ -103,12 +103,17 @@ class Agents:
 
     def buyer_update(self, index):
 
-        old = self.buyers_grid[index][self.get_random_k()]
+        grid = self.buyers_grid
+
+        old = grid[index][self.get_random_k()]
         value_old = self.sellers[old]
 
-        new_sellers = list(set(range(self.size)) - set(self.buyers_grid[index]))
+        # new_sellers = list(set(range(self.size)) - set(self.buyers_grid[index]))
 
-        new = random.choice(new_sellers)
+        # new = random.choice(new_sellers)
+        new = self.get_random_size()
+        while new not in grid[index]:
+            new = self.get_random_size()
         value_new = self.sellers[new]
 
         if value_new > value_old:
@@ -156,7 +161,7 @@ class Agents:
 if __name__ == '__main__':
     n = 1000000
     k = 3
-    a = 0.1
+    a = 0.0
     steps = 1000
     for p in [0.1]:
         print('n={}, k={}, a={}, steps={}, p={}'.format(n, k, a, steps, p))
@@ -166,10 +171,10 @@ if __name__ == '__main__':
         test = time.time()
         f = open('output_{}_n{}_k{}_a{}_steps{}_p{}.txt'.format(time.strftime('%Y%m%d-%H%M%S'), n, k, a, steps, p), 'w')
         for i in range(steps):
-            average = agents.get_average_w()
-            print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
+            # average = agents.get_average_w()
+            print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(""))
             test = time.time()
-            f.write(str(average) + "\n")
-            agents.iterate(1000)
+            # f.write(str(average) + "\n")
+            agents.iterate(100)
 
         f.close()
