@@ -81,11 +81,11 @@ class Agents:
     def generate_randoms(self):
         print("Its randomness")
         while True:
-            if len(self.randoms_size) < 3:
+            if len(self.randoms_size) < 30:
                 self.randoms_size.append(nprnd.randint(0, self.size))
-            if len(self.randoms_k) < 3:
+            if len(self.randoms_k) < 30:
                 self.randoms_k.append(nprnd.randint(0, self.k))
-            if len(self.randoms) < 3:
+            if len(self.randoms) < 30:
                 self.randoms.append(nprnd.random())
 
     def seller_payoff(self, index):
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     steps = 1000
     for p in [0.1]:
         print('n={}, k={}, a={}, steps={}, p={}'.format(n, k, a, steps, p))
-        agents = Agents(n, k, a, time.time(), 4, p)
+        agents = Agents(n, k, a, time.time(), 1, p)
         agents.setup()
         print("test")
         test = time.time()
