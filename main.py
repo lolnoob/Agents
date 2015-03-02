@@ -2,6 +2,7 @@ __author__ = 'sabat'
 
 import random
 import time
+import os
 
 import numpy.random as nprnd
 
@@ -30,7 +31,7 @@ class Agents:
 
     def buyer_payoff(self, index):
         result = 0.0
-        for agent in range(self.buyers_grid[index]):
+        for agent in self.buyers_grid[index]:
             result += self.sellers[agent]
         return result
 
@@ -81,22 +82,28 @@ if __name__ == '__main__':
     n = 1000000
     k = 3
     a = 0.35
-    steps = 1000
-    p = 1.
-    # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs
-    for i in [1]:  #for a single run
-        print('n={}, k={}, a={}, steps={}, p={}'.format(n, k, a, steps, p))
+    steps1 = 100000
+    steps2 = 100000
+    p = 0.0
+    path = "outputs/" + time.strftime('%Y%m%d')
+    # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=1
+    # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=3
+    for p in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:  # for series of runs
+        # for i in [1]:  #for a single run
+        print('n={}, k={}, a={}, steps1={}, steps2={}, p={}'.format(n, k, a, steps1, steps2, p))
         agents = Agents(n, k, a, p)
         agents.setup()
         test = time.time()
-        f = open(
-            'outputs/output_{}_n{}_k{}_a{}_steps{}_p{}.txt'.format(time.strftime('%Y%m%d-%H%M%S'), n, k, a, steps, p), 'w')
-        for i in range(steps):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        f = open(path + '/output_n{}_k{}_a{}_steps1{}_steps2{}_p{}.txt'.format(n, k, a, steps1, steps2, p), 'w')
+        for i in range(steps1):
             average = agents.get_average_w()
             if i % 100 is 0:
                 print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
                 test = time.time()
             f.write(str(average) + "\n")
-            agents.iterate(10)
+            agents.iterate(steps2)
 
         f.close()
+
