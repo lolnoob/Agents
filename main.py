@@ -1,3 +1,5 @@
+import sys
+
 __author__ = 'sabat'
 
 import random
@@ -19,6 +21,7 @@ class Agents:
 
     def setup(self):
         for i in range(self.size):
+            #TODO: Try changing to [0 for i in range(self.size)]
             row = [0] * self.k
             index = 0
             for agent in random.sample(range(self.size), self.k):
@@ -79,31 +82,34 @@ class Agents:
 
 
 if __name__ == '__main__':
+    args = sys.argv
     n = 1000000
-    k = 3
-    a = 0.35
+    k = int(args[1])
+    aaa = list(map(float, args[2:]))
     steps1 = 100000
     steps2 = 100000
     p = 0.0
     path = "outputs/" + time.strftime('%Y%m%d')
     # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=1
-    # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=3
-    for p in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:  # for series of runs
-        # for i in [1]:  #for a single run
-        print('n={}, k={}, a={}, steps1={}, steps2={}, p={}'.format(n, k, a, steps1, steps2, p))
-        agents = Agents(n, k, a, p)
-        agents.setup()
-        test = time.time()
-        if not os.path.exists(path):
-            os.makedirs(path)
-        f = open(path + '/output_n{}_k{}_a{}_steps1{}_steps2{}_p{}.txt'.format(n, k, a, steps1, steps2, p), 'w')
-        for i in range(steps1):
-            average = agents.get_average_w()
-            if i % 100 is 0:
-                print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
-                test = time.time()
-            f.write(str(average) + "\n")
-            agents.iterate(steps2)
+    for a in aaa:
+        for p in [0.00001, 0.000001]:  # for series of runs
+            # for i in [1]:  #for a single run
+            print('n={}, k={}, a={}, steps1={}, steps2={}, p={}'.format(n, k, a, steps1, steps2, p))
+            agents = Agents(n, k, a, p)
+            agents.setup()
+            test = time.time()
+            if not os.path.exists(path):
+                os.makedirs(path)
+            to_format = '{}_output_n{}_k{}_a{}_steps1{}_steps2{}_p{}.txt'
+            filename = to_format.format(time.strftime('%Y%m%d_%H%M%S'), n, k, a, steps1, steps2, p)
+            f = open(os.path.join(path, filename), 'w')
+            for i in range(steps1):
+                average = agents.get_average_w()
+                if i % 100 is 0:
+                    print("Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
+                    test = time.time()
+                f.write(str(average) + "\n")
+                agents.iterate(steps2)
 
-        f.close()
+            f.close()
 
