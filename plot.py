@@ -5,7 +5,7 @@ import re
 
 
 root = 'outputs/'
-for path in os.listdir('outputs/'):
+for path in os.listdir(root):
     path = os.path.join(root, path)
     # print("I am in " + filename)
     if os.path.isdir(path):
