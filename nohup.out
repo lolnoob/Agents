@@ -1,0 +1,29 @@
+n=1000000, k=3, a=0.3, steps1=10, steps2=10, p=1e-06, max_clients=-1
+20150718_001608: Calculating:  0  in time:  -0.031078815460205078  with average:  0.5000519535978906
+20150718_001610: Calculating:  1  in time:  -2.008981227874756  with average:  0.5000517402854245
+20150718_001610: Calculating:  2  in time:  -0.030011653900146484  with average:  0.5000509242812138
+20150718_001610: Calculating:  3  in time:  -0.030041933059692383  with average:  0.5000497074938788
+20150718_001610: Calculating:  4  in time:  -0.030355453491210938  with average:  0.5000488645825658
+20150718_001610: Calculating:  5  in time:  -0.029990434646606445  with average:  0.5000485992246297
+20150718_001610: Calculating:  6  in time:  -0.030112504959106445  with average:  0.5000474801973754
+20150718_001610: Calculating:  7  in time:  -0.0306394100189209  with average:  0.5000476116527444
+20150718_001610: Calculating:  8  in time:  -0.03066229820251465  with average:  0.500046199326059
+20150718_001610: Calculating:  9  in time:  -0.030126571655273438  with average:  0.5000458999429827
+Moving % to %
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/shutil.py", line 522, in move
+    os.rename(src, real_dst)
+FileNotFoundError: [Errno 2] No such file or directory: '20150718_001608_output_n1000000_k3_a0.3_steps110_steps210_p1e-06_maxclients-1.txt' -> 'rsync/20150718_001608_output_n1000000_k3_a0.3_steps110_steps210_p1e-06_maxclients-1.txt'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "main.py", line 158, in <module>
+    shutil.move(filename, rsync_path)
+  File "/usr/lib/python3.4/shutil.py", line 534, in move
+    copy2(src, real_dst)
+  File "/usr/lib/python3.4/shutil.py", line 244, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "/usr/lib/python3.4/shutil.py", line 107, in copyfile
+    with open(src, 'rb') as fsrc:
+FileNotFoundError: [Errno 2] No such file or directory: '20150718_001608_output_n1000000_k3_a0.3_steps110_steps210_p1e-06_maxclients-1.txt'

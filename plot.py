@@ -7,10 +7,9 @@ import re
 root = 'outputs/'
 for path in os.listdir(root):
     path = os.path.join(root, path)
-    # print("I am in " + filename)
     if os.path.isdir(path):
         for filename in os.listdir(path):
-            if filename.endswith(".txt"):
+            if filename.endswith(".txt") and "output" in filename:
                 data_path = os.path.join(path, filename)
                 print(data_path)
                 f = open(data_path, 'r')
@@ -20,8 +19,14 @@ for path in os.listdir(root):
                 a = re.search('_a(.+?)_steps', filename).group(1)
                 p = re.search('_p(.+?).txt', filename).group(1)
                 title = "n={}, k={}, a={}, p={}".format(n,k,a,p)
-
-                plt.plot(list(map(float, f.readlines())))
+                # plt.plot(list(map(float, f.readlines())))
+                list = []
+                for line in f.readlines():
+                    try:
+                        list.append(float(line))
+                    except ValueError:
+                        pass
+                plt.plot(list)
                 plt.title(title)
                 plt.ylabel('<w>')
                 plt.xlabel('time (10^5)')
