@@ -4,6 +4,7 @@
 *.txt
 .idea
 *.log
+*.out
 
 outputs/
 

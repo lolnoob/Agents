@@ -1,3 +1,4 @@
+from builtins import Exception
 from Agents import Agents
 
 __author__ = 'sabat'
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 
 import sys
 import shutil
+import configparser
 
 import time
 import os
@@ -34,21 +36,30 @@ def plot_histogram(x, y, dir_name):
 if __name__ == '__main__':
     # we will read all the properties from a yml file
     args = sys.argv
-    file_path = args[1]
-    
-    n = 1000000
-    k = int(args[1])
-    clients_limit = int(args[2])
-    p = float(args[3])
-    aaa = list(map(float, args[4:]))
-    steps1 = 100000
-    steps2 = 100000
-    path = os.path.join("outputs", time.strftime('%Y%m%d'))
+    conf_file_path = args[1]
+
+    conf_exists = os.path.exists(conf_file_path)
+    filename, ext = os.path.splitext(conf_file_path)
+    if conf_exists and ext is 'ini':
+        config = configparser.ConfigParser()
+        config.read(conf_file_path)
+        if ["model", "simulation"] not in config.sections():
+            raise Exception("Wrong config file content")
+
+        n = config.getint("model", "n")
+        k = config.getint("model", "k")
+        clients_limit = config.getint("model", "clients_limit")
+        p = config.getfloat("model", "p")
+        aaa = list(map(float, config.get("model", "a")))
+
+        steps1 = config.getint("simulation", "steps1")
+        steps2 = config.getint("simulation", "steps2")
+        output_path = config.get("simulation", "output_path")
+        path = os.path.join("outputs", output_path, time.strftime('%Y%m%d'))
     # creating buffer dir for remote syncing outputs
     rsync_path = "rsync"
     if not os.path.exists(rsync_path):
         os.makedirs(rsync_path)
-    # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=1
     for a in aaa:
         print('n={}, k={}, a={}, steps1={}, steps2={}, p={}, max_clients={}'.format(n, k, a, steps1, steps2, p,
                                                                                     clients_limit))
