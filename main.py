@@ -1,3 +1,5 @@
+from Agents import Agents
+
 __author__ = 'sabat'
 
 import matplotlib
@@ -7,90 +9,10 @@ import matplotlib.pyplot as plt
 import sys
 import shutil
 
-import random
 import time
 import os
 
-import numpy.random as nprnd
 import numpy as np
-
-
-class Agents:
-    def __init__(self, size, k, a, p=0.0, buyers_limit=-1):
-        self.size = size  # number of agents
-        self.k = k  # fixed number of sellers for a single buyer
-        self.a = a  # seller strategy update propability
-        self.p = p  # random noise occurance propability
-        self.buyers_grid = [None] * self.size  # list of list of sellers of every buyer
-        self.sellers_count = [0 for i in range(self.size)]  # number of buyers connected to every seller
-        self.sellers = [None] * self.size  # list of seller's prices w
-        self.buyers_limit = buyers_limit
-        self.alpha = 0.1
-
-    def setup(self):
-        for i in range(self.size):
-            row = [0] * self.k
-            index = 0
-            for agent in random.sample(range(self.size), self.k):
-                row[index] = agent
-                self.sellers_count[agent] += 1
-                index += 1
-            self.buyers_grid[i] = row
-
-            self.sellers[i] = nprnd.random()
-
-    def buyer_payoff(self, index):
-        result = 0.0
-        for agent in self.buyers_grid[index]:
-            result += self.sellers[agent]
-        return result
-
-    def seller_payoff(self, index):
-        clients = self.sellers_count[index]
-        if 0 < self.buyers_limit < clients:
-            clients = self.buyers_limit
-        P = clients * (1 - self.sellers[index])
-        return (P  / (1 + self.alpha*P*P))
-
-
-    def buyer_update(self, index):
-        old = self.buyers_grid[index][nprnd.randint(self.k)]
-        value_old = self.sellers[old]
-
-        new = nprnd.randint(self.size)
-        while new in self.buyers_grid[index]:
-            new = nprnd.randint(self.size)
-        value_new = self.sellers[new]
-
-        if value_new > value_old:
-            self.buyers_grid[index].remove(old)
-            self.sellers_count[old] -= 1
-            self.buyers_grid[index].append(new)
-            self.sellers_count[new] += 1
-
-    def seller_update(self, index):
-        compare_to = nprnd.randint(self.size)
-        while compare_to is index:
-            compare_to = nprnd.randint(self.size)
-        if self.seller_payoff(compare_to) > self.seller_payoff(index):
-            self.sellers[index] = self.sellers[compare_to]
-
-    def random_noise(self):
-        self.sellers[nprnd.randint(self.size)] = nprnd.random()
-        # self.sellers[nprnd.randint(self.size)] = nprnd.triangular(0, 0.5, 1)
-
-    def iterate(self, steps):
-        for i in range(steps):
-            if nprnd.random() < self.p:
-                self.random_noise()
-            index = nprnd.randint(0, self.size)
-            if nprnd.random() < self.a:
-                self.seller_update(index)
-            else:
-                self.buyer_update(index)
-
-    def get_average_w(self):
-        return sum(self.sellers) / self.size
 
 
 def plot_histogram(x, y, dir_name):
@@ -110,19 +32,22 @@ def plot_histogram(x, y, dir_name):
     plt.savefig(os.path.join(dir_name, str(i).zfill(5)+'.png'))
 
 if __name__ == '__main__':
+    # we will read all the properties from a yml file
     args = sys.argv
+    file_path = args[1]
+    
     n = 1000000
     k = int(args[1])
-    aaa = list(map(float, args[2:]))
-    steps1 = 10#0000
-    steps2 = 10#0000
-    clients_limit = -1
-    p = 1e-6
+    clients_limit = int(args[2])
+    p = float(args[3])
+    aaa = list(map(float, args[4:]))
+    steps1 = 100000
+    steps2 = 100000
     path = os.path.join("outputs", time.strftime('%Y%m%d'))
     # creating buffer dir for remote syncing outputs
     rsync_path = "rsync"
     if not os.path.exists(rsync_path):
-            os.makedirs(rsync_path)
+        os.makedirs(rsync_path)
     # for a in [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]: #for series of runs K=1
     for a in aaa:
         print('n={}, k={}, a={}, steps1={}, steps2={}, p={}, max_clients={}'.format(n, k, a, steps1, steps2, p,
@@ -144,7 +69,7 @@ if __name__ == '__main__':
         for i in range(steps1):
             average = agents.get_average_w()
             # if i % 100 is 0:
-            print(time.strftime('%Y%m%d_%H%M%S') + ": Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
+            # print(time.strftime('%Y%m%d_%H%M%S') + ": Calculating: ", i, " in time: ", str(test - time.time()), " with average: ", str(average))
             test = time.time()
             if i % 10 is 0:
                 plot_histogram(agents.sellers_count, agents.sellers, hist_dirname)
