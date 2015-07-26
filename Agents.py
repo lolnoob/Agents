@@ -1,4 +1,6 @@
 import random
+import math
+import numpy as np
 from numpy import random as nprnd
 
 __author__ = 'tsabala'
@@ -42,6 +44,9 @@ class Agents:
         P = clients * (1 - self.sellers[index])
         return P / (1+self.alpha*P*P)
 
+    def get_seller_payoffs(self):
+        return list(map(self.seller_payoff, range(self.size)))
+
     def buyer_update(self, index):
         old = self.buyers_grid[index][nprnd.randint(self.k)]
         value_old = self.sellers[old]
@@ -78,4 +83,13 @@ class Agents:
                 self.buyer_update(index)
 
     def get_average_w(self):
-        return sum(self.sellers) / self.size
+        return np.mean(self.sellers)
+
+    def get_variance_w(self):
+        return np.std(self.sellers)
+
+    def get_average_seller_payoff(self):
+        return np.mean(self.get_seller_payoffs())
+
+    def get_average_buyer_payoff(self):
+        return np.mean(list(map(self.buyer_payoff, range(self.size))))

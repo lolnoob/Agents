@@ -45,7 +45,7 @@ if __name__ == '__main__':
         if not set(["model", "simulation"]).issubset(config.sections()):
             raise Exception("Wrong config file content")
 
-        n = config.getint("model", "n")
+        n = config.getint("model", "size")
         k = config.getint("model", "k")
         clients_limit = config.getint("model", "clients_limit")
         p = config.getfloat("model", "p")
@@ -70,25 +70,43 @@ if __name__ == '__main__':
         agents.setup()
         test = time.time()
         curr_time = time.strftime('%H%M%S')
-        hist_dirpath = curr_time + "_histograms"
-        avg_w_data_filename = curr_time + "_avg_w.txt"
-        hist_dirpath = os.path.join(path, hist_dirpath)
+        os.makedirs(curr_time)
+        hist_dirpath = os.path.join(path, curr_time, "histograms")
+        seller_payoff_hist_dirpath = os.path.join(path, curr_time, "seller_payoff_histograms")
         if not os.path.exists(hist_dirpath):
             os.makedirs(hist_dirpath)
-        avg_w_data_filename = os.path.join(path, avg_w_data_filename)
-        f = open(avg_w_data_filename, 'w')
+        if not os.path.exists(seller_payoff_hist_dirpath):
+            os.makedirs(seller_payoff_hist_dirpath)
+        avg_w_data_filename = os.path.join(path, curr_time, "avg_w.txt")
+        std_w_data_filename = os.path.join(path, curr_time, "std_w.txt")
+        avg_buyer_payoff_data_filename = os.path.join(path, curr_time, "avg_buyer_payoff.txt")
+        avg_seller_payoff_data_filename = os.path.join(path, curr_time, "avg_seller_payoff.txt")
+        f1 = open(avg_w_data_filename, 'w')
+        f2 = open(std_w_data_filename, 'w')
+        f3 = open(avg_buyer_payoff_data_filename, 'w')
+        f4 = open(avg_seller_payoff_data_filename, 'w')
         for i in range(steps1):
-            average = agents.get_average_w()
+            average_w = agents.get_average_w()
+            std_w = agents.get_variance_w()
+            average_buyer_payoff = agents.get_average_buyer_payoff()
+            average_seller_payoff = agents.get_average_seller_payoff()
             if i % hist_gen_freq is 0:
                 plot_histogram(agents.sellers_count, agents.sellers, hist_dirpath)
-            f.write(str(average) + "\n")
-            f.flush()
+                plot_histogram(agents.sellers_count, agents.get_seller_payoffs(), seller_payoff_hist_dirpath)
+            f1.write(str(average_w) + "\n")
+            f2.write(str(std_w) + "\n")
+            f3.write(str(average_buyer_payoff) + "\n")
+            f4.write(str(average_seller_payoff) + "\n")
+            f1.flush()
+            f2.flush()
+            f3.flush()
+            f4.flush()
             agents.iterate(steps2)
 
-        f.close()
+        f1.close()
+        f2.close()
+        f3.close()
+        f4.close()
 
-        print("Moving {} to {}".format(avg_w_data_filename, rsync_path))
-        shutil.move(avg_w_data_filename, rsync_path)
-        print("Moving {} to {}".format(hist_dirpath, rsync_path))
-        shutil.move(hist_dirpath, rsync_path)
-
+        print("Moving {} to {}".format(os.path.join(path, curr_time), rsync_path))
+        shutil.move(os.path.join(path, curr_time), rsync_path)
