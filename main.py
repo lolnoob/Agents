@@ -16,21 +16,29 @@ import numpy as np
 
 __author__ = 'sabat'
 
-def plot_histogram(x, y, dir_name):
+def plot_histogram(x, y, x_range, y_range, xlabel, ylabel, dir_name):
     plt.close()
     # heatmap, xedges, yedges = np.histogram2d(x, y, bins=[100, 100], range=[[0.0, 50.], [0., 1.]])
-    heatmap, xedges, yedges = np.histogram2d(x, y, bins=[50, 100], range=[[0.0, 50.], [0., 1.]])
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=[50, 100], range=[x_range, y_range])
     extent = [xedges[0], xedges[-1], yedges[0], 100*yedges[-1]]
     # extent = [0., 4., 0., 1.0]
     heatmap = np.rot90(heatmap)
     heatmap = np.flipud(heatmap)
     # fig2 = plt.figure()
     plt.pcolormesh(xedges, yedges, heatmap)
-    plt.xlabel('k')
-    plt.ylabel('w')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts')
     plt.savefig(os.path.join(dir_name, str(i).zfill(5)+'.png'))
+
+def random_gen(type):
+    if type is 'triangle':
+        return np.random.triangular(0, 0.5, 1)
+    elif type is 'uniform':
+        return np.random.random()
+    else:
+        raise Exception("Unsupported generator type for {}".format(type))
 
 if __name__ == '__main__':
     # we will read all the properties from a yml file
@@ -48,7 +56,9 @@ if __name__ == '__main__':
         n = config.getint("model", "size")
         k = config.getint("model", "k")
         clients_limit = config.getint("model", "clients_limit")
+        random_noise_gen = config.get("model", "random_noise_gen")
         p = config.getfloat("model", "p")
+        alpha = config.getfloat("model", "alpha")
         aaa = list(map(float, config.get("model", "a").split(',')))
 
         steps1 = config.getint("simulation", "steps1")
@@ -66,7 +76,7 @@ if __name__ == '__main__':
         os.makedirs(rsync_path)
     shutil.copy(conf_file_path, rsync_path)
     for a in aaa:
-        agents = Agents(n, k, a, p, clients_limit)
+        agents = Agents(n, k, a, p, clients_limit, alpha, random_noise_gen)
         agents.setup()
         test = time.time()
         curr_time = time.strftime('%H%M%S')
@@ -91,8 +101,8 @@ if __name__ == '__main__':
             average_buyer_payoff = agents.get_average_buyer_payoff()
             average_seller_payoff = agents.get_average_seller_payoff()
             if i % hist_gen_freq is 0:
-                plot_histogram(agents.sellers_count, agents.sellers, hist_dirpath)
-                plot_histogram(agents.sellers_count, agents.get_seller_payoffs(), seller_payoff_hist_dirpath)
+                plot_histogram(agents.sellers_count, agents.sellers, [0.0, 50.], [0.0, 1.0], 'k', '<w>', hist_dirpath)
+                plot_histogram(agents.sellers_count, agents.get_seller_payoffs(), [0.0, 50.], [0.0, 50.0], 'k', 'P_seller',  seller_payoff_hist_dirpath)
             f1.write(str(average_w) + "\n")
             f2.write(str(std_w) + "\n")
             f3.write(str(average_buyer_payoff) + "\n")

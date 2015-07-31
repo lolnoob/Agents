@@ -7,7 +7,7 @@ __author__ = 'tsabala'
 
 
 class Agents:
-    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, alpha=0, random_noise_gen=nprnd.random):
+    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, alpha=0, random_noise_type="uniform"):
         self.size = size  # number of agents
         self.k = k  # fixed number of sellers for a single buyer
         self.a = a  # seller strategy update probability
@@ -17,7 +17,7 @@ class Agents:
         self.sellers = [None] * self.size  # list of seller's prices w
         self.buyers_limit = buyers_limit
         self.alpha = alpha  # tax curve causing with local minimum 1/(1+alpha*x^x)
-        self.random_noise_gen = random_noise_gen  # random gen used for generating noise to the system
+        self.random_noise_type = random_noise_type  # random gen used for generating noise to the system
 
     def setup(self):
         for i in range(self.size):
@@ -29,7 +29,7 @@ class Agents:
                 index += 1
             self.buyers_grid[i] = row
 
-            self.sellers[i] = nprnd.random()
+            self.sellers[i] = self.get_random()
 
     def buyer_payoff(self, index):
         result = 0.0
@@ -70,7 +70,16 @@ class Agents:
             self.sellers[index] = self.sellers[compare_to]
 
     def random_noise(self):
-        self.sellers[nprnd.randint(self.size)] = self.random_noise_gen()
+        self.sellers[nprnd.randint(self.size)] = self.get_random()
+
+    def get_random(self):
+        if self.random_noise_type == 'triangle':
+            rand = np.random.triangular(0, 0.5, 1)
+        elif self.random_noise_type == 'uniform':
+            rand =  np.random.random()
+        else:
+            raise Exception("Unsupported generator type for {}".format(type))
+        return rand
 
     def iterate(self, steps):
         for i in range(steps):
