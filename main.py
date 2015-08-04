@@ -93,7 +93,6 @@ if __name__ == '__main__':
 
         test = time.time()
         curr_time = time.strftime('%H%M%S')
-        os.makedirs(curr_time)
         hist_dirpath = os.path.join(path, curr_time, "histograms")
         seller_payoff_hist_dirpath = os.path.join(path, curr_time, "seller_payoff_histograms")
         if not os.path.exists(hist_dirpath):
