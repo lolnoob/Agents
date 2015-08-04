@@ -1,6 +1,5 @@
 from builtins import Exception
 from Agents import Agents
-from CallThread import CallThread
 
 import matplotlib
 matplotlib.use("Agg")
@@ -116,15 +115,15 @@ if __name__ == '__main__':
             results.append(pool.apply_async(agents.get_average_buyer_payoff))
             results.append(pool.apply_async(agents.get_average_seller_payoff))
             if i % hist_gen_freq is 0:
-                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.sellers, [0.0, 50.], [0.0, 1.0], 'k', 'w', hist_dirpath)))
-                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.get_seller_payoffs(), [0.0, 50.], [0.0, 50.0], 'k', 'P_seller',  seller_payoff_hist_dirpath)))
+                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.sellers, [0.0, 15.], [0.0, 1.0], 'k', 'w', hist_dirpath)))
+                results.append(pool.apply_async(plot_histogram, args=(agents.sellers, agents.get_seller_payoffs(), [0.0, 1.], [0.0, 10.0], 'w', 'P_seller',  seller_payoff_hist_dirpath)))
 
             results = [result.get() for result in results]
 
             average_w = results[0]
-            std_w = results[0]
-            average_buyer_payoff = results[0]
-            average_seller_payoff = results[0]
+            std_w = results[1]
+            average_buyer_payoff = results[2]
+            average_seller_payoff = results[3]
 
             f1.write(str(average_w) + "\n")
             f2.write(str(std_w) + "\n")
