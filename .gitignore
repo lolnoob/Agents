@@ -5,6 +5,7 @@
 .idea
 *.log
 *.out
-
+__pycache__/
 outputs/
+rsync/gi
 

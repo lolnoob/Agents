@@ -80,7 +80,7 @@ class Agents:
         elif self.random_noise_type == 'uniform':
             rand =  np.random.random()
         else:
-            raise Exception("Unsupported generator type for {}".format(type))
+            raise Exception("Unsupported generator type for {}".format(self.random_noise_type))
         return rand
 
     def iterate(self, steps):
