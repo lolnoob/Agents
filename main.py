@@ -1,5 +1,6 @@
 from builtins import Exception
 from Agents import Agents
+from CallThread import CallThread
 
 import matplotlib
 matplotlib.use("Agg")
@@ -8,11 +9,14 @@ import matplotlib.pyplot as plt
 import sys
 import shutil
 import configparser
+import threading
+from multiprocessing.pool import ThreadPool
 
 import time
 import os
 
 import numpy as np
+import random
 
 __author__ = 'sabat'
 
@@ -40,6 +44,9 @@ def random_gen(type):
     else:
         raise Exception("Unsupported generator type for {}".format(type))
 
+def function_to_thread(function, result):
+    result = function()
+
 if __name__ == '__main__':
     # we will read all the properties from a yml file
     args = sys.argv
@@ -65,7 +72,7 @@ if __name__ == '__main__':
         steps2 = config.getint("simulation", "steps2")
         output_path = config.get("simulation", "output_path")
         hist_gen_freq = config.getint("simulation", "hist_gen_freq")
-
+        seed = config.getint("simulation", "seed", fallback=random.randint(0, sys.maxsize))
         curr_date = time.strftime('%Y%m%d-%H%M%S')
         path = os.path.join("outputs", output_path, curr_date)
         if not os.path.exists(path):
@@ -75,9 +82,16 @@ if __name__ == '__main__':
     if not os.path.exists(rsync_path):
         os.makedirs(rsync_path)
     shutil.copy(conf_file_path, rsync_path)
+    pool = ThreadPool(6)
     for a in aaa:
-        agents = Agents(n, k, a, p, clients_limit, alpha, random_noise_gen)
+        agents = Agents(n, k, a, p, clients_limit, alpha, random_noise_gen, seed)
         agents.setup()
+
+        seed_file = open(os.path.join(rsync_path, "seeds.txt"), 'w')
+        seed_file.write("[seeds]\n")
+        seed_file.write("seed="+str(seed)+"\n")
+        seed_file.close()
+
         test = time.time()
         curr_time = time.strftime('%H%M%S')
         os.makedirs(curr_time)
@@ -96,13 +110,22 @@ if __name__ == '__main__':
         f3 = open(avg_buyer_payoff_data_filename, 'w')
         f4 = open(avg_seller_payoff_data_filename, 'w')
         for i in range(steps1):
-            average_w = agents.get_average_w()
-            std_w = agents.get_variance_w()
-            average_buyer_payoff = agents.get_average_buyer_payoff()
-            average_seller_payoff = agents.get_average_seller_payoff()
+            results = []
+            results.append(pool.apply_async(agents.get_average_w))
+            results.append(pool.apply_async(agents.get_variance_w))
+            results.append(pool.apply_async(agents.get_average_buyer_payoff))
+            results.append(pool.apply_async(agents.get_average_seller_payoff))
             if i % hist_gen_freq is 0:
-                plot_histogram(agents.sellers_count, agents.sellers, [0.0, 50.], [0.0, 1.0], 'k', '<w>', hist_dirpath)
-                plot_histogram(agents.sellers_count, agents.get_seller_payoffs(), [0.0, 50.], [0.0, 50.0], 'k', 'P_seller',  seller_payoff_hist_dirpath)
+                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.sellers, [0.0, 50.], [0.0, 1.0], 'k', 'w', hist_dirpath)))
+                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.get_seller_payoffs(), [0.0, 50.], [0.0, 50.0], 'k', 'P_seller',  seller_payoff_hist_dirpath)))
+
+            results = [result.get() for result in results]
+
+            average_w = results[0]
+            std_w = results[0]
+            average_buyer_payoff = results[0]
+            average_seller_payoff = results[0]
+
             f1.write(str(average_w) + "\n")
             f2.write(str(std_w) + "\n")
             f3.write(str(average_buyer_payoff) + "\n")

@@ -7,7 +7,7 @@ __author__ = 'tsabala'
 
 
 class Agents:
-    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, alpha=0, random_noise_type="uniform"):
+    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, alpha=0, random_noise_type="uniform", seed = None):
         self.size = size  # number of agents
         self.k = k  # fixed number of sellers for a single buyer
         self.a = a  # seller strategy update probability
@@ -18,6 +18,8 @@ class Agents:
         self.buyers_limit = buyers_limit
         self.alpha = alpha  # tax curve causing with local minimum 1/(1+alpha*x^x)
         self.random_noise_type = random_noise_type  # random gen used for generating noise to the system
+        random.seed(seed)
+        nprnd.seed(seed)
 
     def setup(self):
         for i in range(self.size):
