@@ -7,7 +7,7 @@ echo "processing..."
 for file in $DIR; do
     if [[ $file == *.ini ]] ; then
         echo "Executing program with config: $file"
-        nohup python3 main.py $file &
+        nice -19 nohup python3 main.py $file &
         sleep 2
         echo $file $! >> pid.txt
     else
