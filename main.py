@@ -2,14 +2,16 @@ from builtins import Exception
 from Agents import Agents
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
 import sys
 import shutil
 import configparser
 import threading
+import multiprocessing
 from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
 
 import time
 import os
@@ -19,10 +21,10 @@ import random
 
 __author__ = 'sabat'
 
-def plot_histogram(x, y, x_range, y_range, xlabel, ylabel, dir_name):
+def plot_histogram(x, y, x_range, y_range, plot_bins, xlabel, ylabel, filename, dir_name):
     plt.close()
     # heatmap, xedges, yedges = np.histogram2d(x, y, bins=[100, 100], range=[[0.0, 50.], [0., 1.]])
-    heatmap, xedges, yedges = np.histogram2d(x, y, bins=[50, 100], range=[x_range, y_range])
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=plot_bins, range=[x_range, y_range])
     extent = [xedges[0], xedges[-1], yedges[0], 100*yedges[-1]]
     # extent = [0., 4., 0., 1.0]
     heatmap = np.rot90(heatmap)
@@ -33,7 +35,7 @@ def plot_histogram(x, y, x_range, y_range, xlabel, ylabel, dir_name):
     plt.ylabel(ylabel)
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts')
-    plt.savefig(os.path.join(dir_name, str(i).zfill(5)+'.png'))
+    plt.savefig(os.path.join(dir_name, str(filename).zfill(5)+'.png'))
 
 def random_gen(type):
     if type is 'triangle':
@@ -82,6 +84,7 @@ if __name__ == '__main__':
         os.makedirs(rsync_path)
     shutil.copy(conf_file_path, rsync_path)
     pool = ThreadPool(6)
+    process_pool = Pool(4)
     for a in aaa:
         agents = Agents(n, k, a, p, clients_limit, alpha, random_noise_gen, seed)
         agents.setup()
@@ -114,8 +117,9 @@ if __name__ == '__main__':
             results.append(pool.apply_async(agents.get_average_buyer_payoff))
             results.append(pool.apply_async(agents.get_average_seller_payoff))
             if i % hist_gen_freq is 0:
-                results.append(pool.apply_async(plot_histogram, args=(agents.sellers_count, agents.sellers, [0.0, 15.], [0.0, 1.0], 'k', 'w', hist_dirpath)))
-                results.append(pool.apply_async(plot_histogram, args=(agents.sellers, agents.get_seller_payoffs(), [0.0, 1.], [0.0, 10.0], 'w', 'P_seller',  seller_payoff_hist_dirpath)))
+                sellers = list(agents.sellers)
+                process_pool.apply_async(plot_histogram, args=(list(agents.sellers_count), sellers, [0.0, 50.], [0.0, 1.0], [50, 100], 'k', 'w', i, hist_dirpath))
+                process_pool.apply_async(plot_histogram, args=(sellers, agents.get_seller_payoffs(), [0.0, 1.], [0.0, 20.0], [80, 80], 'w', 'P_seller',  i, seller_payoff_hist_dirpath))
 
             results = [result.get() for result in results]
 
@@ -138,6 +142,7 @@ if __name__ == '__main__':
         f2.close()
         f3.close()
         f4.close()
-
+        pool.close()
+        pool.join()
         print("Moving {} to {}".format(os.path.join(path, curr_time), rsync_path))
         shutil.move(os.path.join(path, curr_time), rsync_path)
