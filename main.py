@@ -19,7 +19,7 @@ import os
 import numpy as np
 import random
 
-__author__ = 'sabat'
+__author__ = 'Tomasz Sabała'
 
 def plot_histogram(x, y, x_range, y_range, plot_bins, xlabel, ylabel, filename, dir_name):
     plt.close()
@@ -64,6 +64,7 @@ if __name__ == '__main__':
         n = config.getint("model", "size")
         k = config.getint("model", "k")
         clients_limit = config.getint("model", "clients_limit")
+        linear_tax = config.getboolean("model", "linear_tax")
         random_noise_gen = config.get("model", "random_noise_gen")
         p = config.getfloat("model", "p")
         alpha = config.getfloat("model", "alpha")
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     pool = ThreadPool(6)
     process_pool = Pool(4)
     for a in aaa:
-        agents = Agents(n, k, a, p, clients_limit, alpha, random_noise_gen, seed)
+        agents = Agents(n, k, a, p, clients_limit, linear_tax, alpha, random_noise_gen, seed)
         agents.setup()
 
         seed_file = open(os.path.join(rsync_path, "seeds.txt"), 'w')

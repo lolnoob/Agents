@@ -7,5 +7,5 @@
 *.out
 __pycache__/
 outputs/
-rsync/gi
+rsync/
 

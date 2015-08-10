@@ -3,11 +3,11 @@ import math
 import numpy as np
 from numpy import random as nprnd
 
-__author__ = 'tsabala'
+__author__ = 'Tomasz Sabała'
 
 
 class Agents:
-    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, alpha=0, random_noise_type="uniform", seed = None):
+    def __init__(self, size, k, a, p=0.0, buyers_limit=-1, linear_tax=False, alpha=0, random_noise_type="uniform", seed = None):
         self.size = size  # number of agents
         self.k = k  # fixed number of sellers for a single buyer
         self.a = a  # seller strategy update probability
@@ -16,6 +16,8 @@ class Agents:
         self.sellers_count = [0 for i in range(self.size)]  # number of buyers connected to every seller
         self.sellers = [None] * self.size  # list of seller's prices w
         self.buyers_limit = buyers_limit
+        self.linear_tax = linear_tax
+        self.linear_tax_details = (2.5, 0.19, 0.4) # (tax threshold, below threshold tax, above threshold tax)
         self.alpha = alpha  # tax curve causing with local minimum 1/(1+alpha*x^x)
         self.random_noise_type = random_noise_type  # random gen used for generating noise to the system
         random.seed(seed)
@@ -43,8 +45,14 @@ class Agents:
         clients = self.sellers_count[index]
         if 0 < self.buyers_limit < clients:
             clients = self.buyers_limit
-        P = clients * (1 - self.sellers[index])
-        return P / (1+self.alpha*P*P)
+        payoff = clients * (1 - self.sellers[index])
+        if self.linear_tax:
+            if payoff > self.linear_tax_details[0]:
+                payoff = self.linear_tax_details[0]*(1.0 - self.linear_tax_details[1]) + \
+                    (payoff-self.linear_tax_details[0])*(1.0 - self.linear_tax_details[2])
+            else:
+                payoff *= (1.0 - self.linear_tax_details[1])
+        return payoff / (1+self.alpha*payoff*payoff)
 
     def get_seller_payoffs(self):
         return list(map(self.seller_payoff, range(self.size)))

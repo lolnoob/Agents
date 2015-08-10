@@ -4,7 +4,7 @@ import time
 import re
 
 
-root = '/media/tsabala/TOURO/Agents/uniform3'
+root = '/media/tsabala/TOURO/Agents/triangle3'
 for path in os.listdir(root):
     path = os.path.join(root, path)
     if os.path.isdir(path):
@@ -36,5 +36,5 @@ for path in os.listdir(root):
                         plt.ylabel('<w>')
                         plt.xlabel('time (10^5)')
                         figname = os.path.splitext(filename)[0] + ".png"
-                        plt.savefig(os.path.join(path, figname))
+                        plt.savefig(os.path.join(path, dir, figname))
                         plt.clf()
