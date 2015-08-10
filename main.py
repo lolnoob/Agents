@@ -2,6 +2,7 @@ from builtins import Exception
 from Agents import Agents
 
 import matplotlib
+
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
@@ -21,11 +22,12 @@ import random
 
 __author__ = 'Tomasz Sabała'
 
+
 def plot_histogram(x, y, x_range, y_range, plot_bins, xlabel, ylabel, filename, dir_name):
     plt.close()
     # heatmap, xedges, yedges = np.histogram2d(x, y, bins=[100, 100], range=[[0.0, 50.], [0., 1.]])
     heatmap, xedges, yedges = np.histogram2d(x, y, bins=plot_bins, range=[x_range, y_range])
-    extent = [xedges[0], xedges[-1], yedges[0], 100*yedges[-1]]
+    extent = [xedges[0], xedges[-1], yedges[0], 100 * yedges[-1]]
     # extent = [0., 4., 0., 1.0]
     heatmap = np.rot90(heatmap)
     heatmap = np.flipud(heatmap)
@@ -35,7 +37,8 @@ def plot_histogram(x, y, x_range, y_range, plot_bins, xlabel, ylabel, filename, 
     plt.ylabel(ylabel)
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts')
-    plt.savefig(os.path.join(dir_name, str(filename).zfill(5)+'.png'))
+    plt.savefig(os.path.join(dir_name, str(filename).zfill(5) + '.png'))
+
 
 def random_gen(type):
     if type is 'triangle':
@@ -45,11 +48,13 @@ def random_gen(type):
     else:
         raise Exception("Unsupported generator type for {}".format(type))
 
+
 def function_to_thread(function, result):
     result = function()
 
+
 if __name__ == '__main__':
-    # we will read all the properties from a yml file
+    # we will read all the properties from a ini file
     args = sys.argv
     conf_file_path = args[1]
 
@@ -92,7 +97,7 @@ if __name__ == '__main__':
 
         seed_file = open(os.path.join(rsync_path, "seeds.txt"), 'w')
         seed_file.write("[seeds]\n")
-        seed_file.write("seed="+str(seed)+"\n")
+        seed_file.write("seed=" + str(seed) + "\n")
         seed_file.close()
 
         test = time.time()
@@ -119,8 +124,11 @@ if __name__ == '__main__':
             results.append(pool.apply_async(agents.get_average_seller_payoff))
             if i % hist_gen_freq is 0:
                 sellers = list(agents.sellers)
-                process_pool.apply_async(plot_histogram, args=(list(agents.sellers_count), sellers, [0.0, 50.], [0.0, 1.0], [50, 100], 'k', 'w', i, hist_dirpath))
-                process_pool.apply_async(plot_histogram, args=(sellers, agents.get_seller_payoffs(), [0.0, 1.], [0.0, 20.0], [80, 80], 'w', 'P_seller',  i, seller_payoff_hist_dirpath))
+                process_pool.apply_async(plot_histogram, args=(
+                list(agents.sellers_count), sellers, [0.0, 50.], [0.0, 1.0], [50, 100], 'k', 'w', i, hist_dirpath))
+                process_pool.apply_async(plot_histogram, args=(
+                sellers, agents.get_seller_payoffs(), [0.0, 1.], [0.0, 20.0], [80, 80], 'w', 'P_seller', i,
+                seller_payoff_hist_dirpath))
 
             results = [result.get() for result in results]
 
