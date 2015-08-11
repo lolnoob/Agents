@@ -89,9 +89,9 @@ if __name__ == '__main__':
     if not os.path.exists(rsync_path):
         os.makedirs(rsync_path)
     shutil.copy(conf_file_path, rsync_path)
-    pool = ThreadPool(6)
-    process_pool = Pool(4)
+    process_pool = Pool(2)
     for a in aaa:
+        pool = ThreadPool(6)
         agents = Agents(n, k, a, p, clients_limit, linear_tax, alpha, random_noise_gen, seed)
         agents.setup()
 
