@@ -105,7 +105,7 @@ class Agents:
     def get_average_w(self):
         return np.mean(self.sellers)
 
-    def get_variance_w(self):
+    def get_std_w(self):
         return np.std(self.sellers)
 
     def get_average_seller_payoff(self):

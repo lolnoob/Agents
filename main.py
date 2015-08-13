@@ -119,7 +119,7 @@ if __name__ == '__main__':
         for i in range(steps1):
             results = []
             results.append(pool.apply_async(agents.get_average_w))
-            results.append(pool.apply_async(agents.get_variance_w))
+            results.append(pool.apply_async(agents.get_std_w))
             results.append(pool.apply_async(agents.get_average_buyer_payoff))
             results.append(pool.apply_async(agents.get_average_seller_payoff))
             if i % hist_gen_freq is 0:
